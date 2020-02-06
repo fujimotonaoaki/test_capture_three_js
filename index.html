@@ -1,0 +1,160 @@
+<html>
+	<head>
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; }
+			canvas { display: block; }
+			#capturedst{
+				background-color:lightgray;
+				width:200;
+				height:200;
+				z-index: 100000;
+			}
+			#capturedst img{
+				position:absolute;
+				left: 1em;
+  				top: 1em;
+				max-width: 300px;
+				max-height: 150px;
+				padding: 2px;
+				background-color:white;
+				border: 1px solid #111;
+				z-index: 100000;
+			}
+			#hiddenLink{
+				display:none;
+			}
+
+		</style>
+	</head>
+	<body>
+		<canvas id="camerafeed"></canvas>
+		<div id="capturedst">dst</div>
+		<a id="hiddenLink" download="canvas.png">link</a>
+
+		<script src="js/three.js"></script>
+		<script type="text/javascript" src="https://mementoo.info/js/jquery-min.js"></script>
+		<script>
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+/*
+			var renderer = new THREE.WebGLRenderer({
+				canvas: document.querySelector('#camerafeed')
+			});
+			*/
+			this.renderer = new THREE.WebGLRenderer({
+				preserveDrawingBuffer: true, 
+				canvas: document.querySelector('#camerafeed')
+				});
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.setClearColor( 0xFFAAFF );
+			document.body.appendChild( renderer.domElement );
+
+			var geometry = new THREE.BoxGeometry();
+			var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+			var cube = new THREE.Mesh( geometry, material );
+			scene.add( cube );
+
+			camera.position.z = 5;
+
+			var animate = function () {
+				requestAnimationFrame( animate );
+
+				cube.rotation.x += 0.01;
+				cube.rotation.y += 0.01;
+
+				renderer.render( scene, camera );
+			};
+
+			animate();
+
+			var imgresizeToSrc = function(img,w,h){
+				var canvas = document.createElement('canvas');
+				canvas.width = w;
+				canvas.height = h;
+				var ctx = canvas.getContext('2d');
+				ctx.drawImage(img,0,0,w,h);
+				return canvas.toDataURL();
+			}
+
+			var selector = "canvas";
+
+			document.getElementById('camerafeed').onclick = function() {	 	
+				var img = new Image();
+				//var canvas = getCanvas();
+				var canvas = document.getElementById('camerafeed');
+				var context = canvas.getContext("experimental-webgl", {preserveDrawingBuffer: true});
+				img.src = canvas.toDataURL('image/png');
+
+				alert( JSON.stringify( context ) )
+
+				// download link
+				let link = document.getElementById('hiddenLink')
+  				link.href = canvas.toDataURL()
+				link.click()
+				//document.getElementById('canvasImage').src = canvas.toDataURL()
+				
+				//alert( img.src );
+
+				img.onload = function(){
+					// get image width/height
+					var w = $(selector).css("width");
+					var h = $(selector).css("height");
+					
+					w = w.replace(/px/,"");
+					h = h.replace(/px/,"");
+
+					//alert( w );
+
+					var src = imgresizeToSrc(img,w,h);
+					
+					$("#capturedst").html('<img src="' + src + '">');
+					var dw = $("#capturedst img").css("width");
+					var dh = $("#capturedst img").css("height");
+
+					var mw = $("#capturedst img").css("max-width");
+					var mh = $("#capturedst img").css("max-height");
+					mw = mw.replace(/px/,"");
+					mh = mh.replace(/px/,"");
+					mw = parseInt(mw);
+					mh = parseInt(mh);
+					var nw = w;
+					var nh = h;
+					if(nw>mw){
+						var ratio = mw/nw;
+						nw = mw ;
+						nh = parseInt(nh*ratio);
+					}
+					if(nh>mh){
+						var ratio = mh / nh;
+						nh = mh;
+						nw = parseInt(nw*ratio);
+					}
+					$("#capturedst img").css("width",nw);
+					$("#capturedst img").css("height",nh);
+
+					//alert( 'capturedst width/height: ' + nw + ', ' + nh );
+
+/*
+					var cpw = $("#capturearea").css("width");
+					var cph = $("#capturearea").css("height");
+					dw = dw.replace(/px/,"");
+					dh = dh.replace(/px/,"");			
+					cpw = cpw.replace(/px/,"");
+					cph = cph.replace(/px/,"");
+					var top = parseInt((cph-nh)/2);
+					var left = parseInt((cpw-nw)/2);
+					*/
+					//$("#capturedst img").css("top",top+"px");
+					//$("#capturedst img").css("left",left+"px");
+					//$("#capturedst").fadeIn(600);
+				};
+
+			};
+
+		</script>
+		
+	</body>
+</html>
